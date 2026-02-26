@@ -1,0 +1,6 @@
+*.token
+*_token
+token.json
+.env
+__pycache__/
+*.pyc
