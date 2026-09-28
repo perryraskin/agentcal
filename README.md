@@ -2,6 +2,55 @@
 
 Multi-provider calendar CLI for AI agents.
 
+It also includes a continuously running, idempotent two-way sync service for
+Microsoft Outlook and Google Calendar.
+
+## Outlook ↔ Google sync service
+
+The Docker service polls both calendars (30 days back and 365 days forward by
+default) and synchronizes creates, edits, and deletes in both directions.
+
+Duplicate and loop prevention is layered:
+
+- Existing events are paired first by `iCalUID`, then by an unambiguous exact
+  title/location/time fingerprint.
+- Each pair is persisted in `/data/state.json` with provider content hashes.
+- Google mirrors get a deterministic event ID plus private `agentcal` metadata.
+- Outlook mirrors get a deterministic `transactionId` plus an extended property.
+- A retried create therefore resolves to the same provider event.
+- A simultaneous edit uses the latest provider modification timestamp.
+- A deletion must be absent from two complete polls, and out-of-window events
+  are checked directly before deletion is propagated.
+
+The sync intentionally does not copy attendees. That avoids sending duplicate
+invitations or changing meeting ownership. Title, description, location,
+all-day/timed boundaries, free/busy, and private visibility are synchronized.
+Recurring events are synchronized as the instances returned by each provider's
+calendar-view API.
+
+### Configuration
+
+Composio stores and refreshes the Google and Microsoft OAuth grants. Copy
+`.env.example` to `.env` and set the Composio project API key plus the two
+connected-account IDs. Real credentials must never be committed.
+
+```bash
+cp .env.example .env
+docker compose build
+docker compose up -d
+curl --fail http://127.0.0.1:8160/healthz
+```
+
+The service listens on port `8160` by default. `/healthz` returns the last sync
+counts and becomes unhealthy after three missed poll intervals. Docker logs are
+structured JSON so the container appears cleanly in Dozzle.
+
+Run a single foreground cycle for troubleshooting:
+
+```bash
+docker compose run --rm agentcal-sync node src/server.js --once
+```
+
 `agentcal` unifies local calendar data from:
 - Google Calendar
 - Microsoft Outlook (Graph API)

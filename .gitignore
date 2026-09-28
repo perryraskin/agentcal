@@ -1,6 +1,4 @@
-*.token
-*_token
-token.json
+node_modules/
+data/
 .env
-__pycache__/
-*.pyc
+*.log
