@@ -9,9 +9,6 @@
     "sync-once": "node src/server.js --once",
     "test": "node --test"
   },
-  "dependencies": {
-    "@composio/core": "0.21.0"
-  },
   "engines": {
     "node": ">=22.22.3"
   }

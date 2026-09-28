@@ -13,6 +13,8 @@ services:
       - "${AGENTCAL_BIND_IP:-127.0.0.1}:${AGENTCAL_PORT:-8160}:8080"
     volumes:
       - ./data:/data
+      - ./composio-data/user_data.json:/home/node/.composio/user_data.json
+      - ./composio-data/config.json:/home/node/.composio/config.json
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 30s

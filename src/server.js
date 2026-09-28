@@ -11,9 +11,12 @@ function required(name) {
 }
 
 const config = {
-  composioApiKey: required("COMPOSIO_API_KEY"),
-  googleAccountId: required("GOOGLE_CONNECTED_ACCOUNT_ID"),
-  outlookAccountId: required("OUTLOOK_CONNECTED_ACCOUNT_ID"),
+  composioBin: process.env.COMPOSIO_BIN || "composio",
+  googleAccount: required("GOOGLE_CONNECTED_ACCOUNT"),
+  outlookAccount: required("OUTLOOK_CONNECTED_ACCOUNT"),
+  expectedGoogleEmail: required("EXPECTED_GOOGLE_EMAIL"),
+  expectedOutlookEmail: required("EXPECTED_OUTLOOK_EMAIL"),
+  providerTimeoutMs: Number(process.env.PROVIDER_TIMEOUT_MS || 120000),
   googleCalendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
   outlookCalendarId: process.env.OUTLOOK_CALENDAR_ID || "primary",
   timezone: process.env.SYNC_TIMEZONE || "America/New_York",
@@ -26,7 +29,10 @@ const config = {
 
 const store = new StateStore(config.dataDir);
 await store.load();
-const sync = new CalendarSync({ providers: new Providers(config), store, config });
+const providers = new Providers(config);
+const identities = await providers.verifyIdentities();
+console.log(JSON.stringify({ event: "identities_verified", ...identities }));
+const sync = new CalendarSync({ providers, store, config });
 let running = false;
 let lastError = null;
 

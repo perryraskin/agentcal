@@ -30,9 +30,13 @@ calendar-view API.
 
 ### Configuration
 
-Composio stores and refreshes the Google and Microsoft OAuth grants. Copy
-`.env.example` to `.env` and set the Composio project API key plus the two
-connected-account IDs. Real credentials must never be committed.
+Composio's **For You** mode stores and refreshes the Google and Microsoft OAuth
+grants. Copy `.env.example` to `.env`, set the two personal connected-account
+IDs, and mount the signed-in CLI's `user_data.json` and `config.json` from
+`./composio-data`. The service verifies both provider email addresses before
+syncing and stops on any mismatch.
+No Platform project or project API key is used. Real authentication files must
+never be committed.
 
 ```bash
 cp .env.example .env
