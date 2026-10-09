@@ -32,7 +32,12 @@ class ProviderError extends Error {
 }
 
 function unwrap(result) {
-  const status = Number(result?.error?.code ?? result?.status ?? 0);
+  const error = result?.error;
+  const status = Number(result?.status ?? error?.code ?? 0);
+  if (error) {
+    const missing = ["ErrorItemNotFound", "ResourceNotFound", "ErrorResourceNotFound"].includes(error.code);
+    throw new ProviderError(missing ? 404 : status >= 400 ? status : 502, result);
+  }
   if (status >= 400) throw new ProviderError(status, result);
   return result?.data ?? result;
 }
