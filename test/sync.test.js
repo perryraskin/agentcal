@@ -67,3 +67,20 @@ test("initial UID pairing updates rather than creating a duplicate", async () =>
   assert.deepEqual(calls.map(([name]) => name), ["updateGoogle"]);
   assert.equal(Object.keys(store.state.pairs).length, 1);
 });
+
+test("cancelled events fetched by ID follow two-snapshot deletion confirmation", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "agentcal-test-"));
+  const store = new StateStore(directory); await store.load();
+  store.state.pairs["outlook-1::google-1"] = { outlookId: "outlook-1", googleId: "google-1" };
+  const calls = [];
+  const providers = {
+    listOutlook: async () => [], listGoogle: async () => [googleEvent],
+    getOutlook: async () => ({ ...outlookEvent, isCancelled: true }),
+    deleteGoogle: async id => calls.push(id),
+    updateGoogle: async () => { throw new Error("must not update cancelled event"); },
+    createOutlook: async () => { throw new Error("must not recreate cancelled event"); }
+  };
+  const sync = new CalendarSync({ providers, store, config: { pastDays: 30, futureDays: 365 }, logger: { log() {} } });
+  await sync.run(); assert.deepEqual(calls, []);
+  await sync.run(); assert.deepEqual(calls, ["google-1"]);
+});

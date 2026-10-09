@@ -37,3 +37,13 @@ test("For You provider calls are serialized and identities are pinned", async ()
   assert.equal(calls.length, 2);
   assert.ok(calls.every(({ args }) => args.includes("--skip-connection-check")));
 });
+
+test("Graph missing-event errors become null instead of empty calendar events", async () => {
+  const providers = new Providers({ composioBin: "composio", outlookAccount: "outlook-account" }, async () => ({ stdout: JSON.stringify({ error: { code: "ErrorItemNotFound", message: "Missing" } }) }));
+  assert.equal(await providers.getOutlook("deleted-event"), null);
+});
+
+test("Graph errors with string codes fail safely", async () => {
+  const providers = new Providers({ composioBin: "composio" }, async () => ({ stdout: JSON.stringify({ error: { code: "ErrorAccessDenied", message: "Denied" } }) }));
+  await assert.rejects(providers.outlook({ endpoint: "https://graph.microsoft.com/v1.0/me/events" }), /HTTP 502/);
+});

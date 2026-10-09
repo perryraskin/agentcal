@@ -115,11 +115,11 @@ export class CalendarSync {
       // Confirm it by ID before considering deletion propagation.
       if (!outlookEvent && googleEvent) {
         const fetched = await this.providers.getOutlook(pair.outlookId);
-        if (fetched) outlookEvent = normalizeOutlook(fetched);
+        if (fetched && !fetched.isCancelled) outlookEvent = normalizeOutlook(fetched);
       }
       if (!googleEvent && outlookEvent) {
         const fetched = await this.providers.getGoogle(pair.googleId);
-        if (fetched) googleEvent = normalizeGoogle(fetched);
+        if (fetched && fetched.status !== "cancelled") googleEvent = normalizeGoogle(fetched);
       }
       if (!outlookEvent && !googleEvent) {
         delete this.store.state.pairs[key];
